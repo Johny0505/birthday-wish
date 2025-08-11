@@ -1,0 +1,134 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Happy Birthday!</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  html,body{height:100%;margin:0;overflow:hidden;font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial;}
+  body{background:linear-gradient(180deg,#0b1221 0%, #111827 100%); color:#fff}
+  .center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;color:#fff;max-width:94vw}
+  #revealBtn{padding:12px 24px;font-size:20px;border-radius:10px;background:linear-gradient(90deg,#ff7a7a,#ffb86b);border:none;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,0.45);color:#111}
+  #message{font-size:48px;margin-top:18px;opacity:0;transition:opacity 900ms cubic-bezier(.2,.9,.2,1), transform 900ms; transform:translateY(20px); font-weight:700; text-shadow:0 6px 30px rgba(0,0,0,0.6);}
+  #photo{width:260px;height:260px;border-radius:14px;object-fit:cover;display:block;margin:18px auto;opacity:0;transform:scale(.86);transition:opacity 900ms cubic-bezier(.2,.9,.2,1), transform 900ms; box-shadow:0 18px 40px rgba(0,0,0,.6); background:#222; border:4px solid rgba(255,255,255,0.06);}
+  canvas{position:fixed;left:0;top:0;pointer-events:none;z-index:10}
+  @media (max-width:420px){ #message{font-size:32px} #photo{width:200px;height:200px} #revealBtn{font-size:18px;padding:10px 18px} }
+  /* tiny helper for replacing name in-place */
+  .subtle{font-size:14px;opacity:.7;margin-top:8px}
+</style>
+</head>
+<body>
+<canvas id="confetti"></canvas>
+<div class="center" role="main" aria-live="polite">
+  <button id="revealBtn" aria-label="Reveal surprise">Tap to Reveal 🎉</button>
+  <!-- The image below is a placeholder SVG embedded as a data-uri so this single file works standalone.
+       When you want, upload your photo here and I'll embed it so you don't need multiple files.
+       Or replace the src value with a filename if you're uploading multiple files together. -->
+  <img id="photo" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27600%27%20height%3D%27600%27%3E%3Crect%20width%3D%27100%25%27%20height%3D%27100%25%27%20fill%3D%27%2523222%27%2F%3E%3Ctext%20x%3D%2750%25%27%20y%3D%2750%25%27%20font-size%3D%2736%27%20fill%3D%27%2523bbb%27%20text-anchor%3D%27middle%27%20dominant-baseline%3D%27middle%27%20font-family%3D%27Arial%27%3EYour%20Photo%20Here%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Your photo">
+  <div id="message">Happy Birthday!</div>
+  <div class="subtle">Tip: I can put your friend's name and embed your photo — just attach it here.</div>
+</div>
+
+<script>
+(function(){
+  // Simple confetti/fireworks burst + sparkle reveal
+  const canvas = document.getElementById('confetti');
+  const ctx = canvas.getContext('2d');
+  let W = canvas.width = window.innerWidth;
+  let H = canvas.height = window.innerHeight;
+  window.addEventListener('resize', ()=>{W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight});
+
+  function rand(min,max){ return Math.random()*(max-min)+min }
+
+  function launch() {
+    const pieces = [];
+    const colors = ['#ff4d4d','#ff9f43','#ffd93d','#6ee7b7','#60a5fa','#b78bff'];
+    const cx = W/2, cy = H/2;
+    // create rectangles (confetti)
+    for(let i=0;i<180;i++){
+      pieces.push({
+        x: cx + rand(-40,40),
+        y: cy + rand(-40,40),
+        vx: rand(-8,8),
+        vy: rand(-14,-4),
+        w: rand(6,12),
+        h: rand(6,10),
+        color: colors[Math.floor(rand(0,colors.length))],
+        r: rand(0,360),
+        vr: rand(-10,10),
+        life: Math.floor(rand(80,160))
+      });
+    }
+    // animation loop
+    (function frame(){
+      ctx.clearRect(0,0,W,H);
+      for(let i=pieces.length-1;i>=0;i--){
+        const p = pieces[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.45; // gravity
+        p.vx *= 0.998;
+        p.vr *= 0.998;
+        p.r += p.vr;
+        p.life--;
+        ctx.save();
+        ctx.translate(p.x,p.y);
+        ctx.rotate(p.r * Math.PI/180);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+        ctx.restore();
+        if(p.life <= 0) pieces.splice(i,1);
+      }
+      if(pieces.length>0) requestAnimationFrame(frame);
+      else ctx.clearRect(0,0,W,H);
+    })();
+  }
+
+  // small expanding sparkle dots
+  function sparkleBurst(){
+    for(let i=0;i<30;i++){
+      const d = document.createElement('div');
+      d.style.position='fixed';
+      d.style.left = (W/2 + rand(-80,80))+'px';
+      d.style.top = (H/2 + rand(-80,80))+'px';
+      d.style.width = d.style.height = rand(6,14)+'px';
+      d.style.background = ['#fff','#ffd700','#ff69b4','#87ceeb'][Math.floor(rand(0,4))];
+      d.style.borderRadius='50%';
+      d.style.opacity=1;
+      d.style.pointerEvents='none';
+      d.style.transition='transform 700ms cubic-bezier(.2,.9,.2,1), opacity 700ms';
+      document.body.appendChild(d);
+      setTimeout(()=>{ d.style.transform='scale(6)'; d.style.opacity=0; }, 30);
+      setTimeout(()=>d.remove(),820);
+    }
+  }
+
+  // UI wiring
+  const btn = document.getElementById('revealBtn');
+  const photo = document.getElementById('photo');
+  const msg = document.getElementById('message');
+
+  btn.addEventListener('click', ()=>{
+    btn.disabled = true;
+    btn.style.opacity = 0;
+    setTimeout(()=>btn.style.display='none',800);
+    sparkleBurst();
+    launch();
+    // reveal image + text
+    setTimeout(()=>{ photo.style.opacity=1; photo.style.transform='scale(1)'; msg.style.opacity=1; msg.style.transform='translateY(0)'; }, 300);
+  });
+
+  // allow pressing Enter / Space on button
+  btn.addEventListener('keyup', (e)=>{ if(e.key==='Enter' || e.key===' ') btn.click(); });
+
+  // accessibility: if user prefers reduced motion, don't auto animate
+  const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+  if(mq.matches){
+    // disable transitions
+    photo.style.transition = 'none';
+    msg.style.transition = 'none';
+  }
+})();
+</script>
+</body>
+</html>
